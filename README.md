@@ -1,19 +1,23 @@
 # Delegate skill for Claude Code
 
-A [Claude Code](https://claude.com/claude-code) skill that hands work to a subagent on a fitting model and brings back only the result. Write "delegate" in a message, or ask for something to run on a subagent, and that task leaves your main session; you get the answer back.
+A [Claude Code](https://claude.com/claude-code) skill that runs a task on a subagent and returns only the result to your session. Write "delegate" in a message, or ask for something to run on a subagent. Claude picks a model, writes the subagent a brief and reports back what it found.
+
+![Two fixes delegated to subagents that run in parallel](demo/delegate.gif)
+
+_A staged illustration made with `demo/delegate.sh`, not a recording of a real session._
 
 ## Why
 
-Long sessions fill up with raw material: files read to find one function, a whole test log for one failure, pages of search hits. All of it stays in the main model's context, makes every later turn more expensive and pushes out what matters. A subagent reads that material in its own context and returns a few lines, often on a cheaper model.
+Everything Claude reads in a session stays in its context, including whole files opened to find one function and full test logs. Later turns cost more, and older details get pushed out. A subagent does that reading in its own context and sends back a short report, usually from a cheaper model than the one you are talking to.
 
-Typing "run this on a subagent and pick a suitable model" every few messages gets old. This skill turns that request into one word.
+I kept typing "run this on a subagent and pick a suitable model". With this skill, "delegate" is enough.
 
 ## Examples
 
 | You write | What happens |
 | --- | --- |
-| `review this plan, delegate` | One subagent reviews the plan; you get its findings |
-| `fix 1 and 2, delegate` | Each item gets its own subagent, in parallel |
+| `review this plan, delegate` | One subagent reviews the plan and you get its findings |
+| `fix 1 and 2, delegate` | Each item gets its own subagent, and they run in parallel |
 | `look at this as a Payload developer, on opus` | The subagent runs on the model you named |
 | `run the tests in a subagent` | Plain language works too, without the word "delegate" |
 
@@ -47,22 +51,22 @@ If a `delegate` skill already exists in `~/.claude/skills`, inspect it before re
 
 ## How it works
 
-1. **Brief.** A subagent starts with none of your conversation, so Claude writes a brief that stands on its own: the goal, what is already decided, the files and issues involved, the rules the session follows (worktrees, commit and push rules, skills to load), what done looks like, and a short report format. When the brief would mostly retell the conversation, Claude forks the session instead.
-2. **Model and effort.** A model you name wins. Otherwise Claude picks the cheapest model and effort that do the task well. Iterative work, such as debugging by hypothesis, goes to one subagent that runs the whole loop.
-3. **Dispatch.** You get one line per subagent: what it does, on which model and effort, and why.
-4. **Result.** Claude checks the result against the brief. It looks at what a decision rests on itself, such as screenshots or the final diff before a commit, and sends a weak result back or up one model. You get the answer, its evidence and the open points, without the subagent's logs.
+1. The subagent starts with none of your conversation, so Claude writes it a brief that works on its own. The brief covers the goal, decisions already made, the files and issues involved, the session's rules (worktrees, commit and push rules, skills to load), when the task counts as done, and how to report. If the brief would mostly repeat the conversation, Claude forks the session instead.
+2. If you named a model, Claude uses it. Otherwise it picks the cheapest model and effort it expects to do the job. A task that takes several rounds of trial and error, such as debugging, goes to a single subagent that keeps going until it has an answer.
+3. Before the subagents start, Claude tells you in one line each what they will do, on which model and effort, and why.
+4. When a subagent finishes, Claude checks its report against the brief and reads screenshots and the final diff before a commit itself. A poor report goes back to the same subagent, or once to a stronger model. You get the answer, where to find the evidence, and anything still open.
 
-Independent items run in parallel, and subagents that write each get their own git worktree.
+Independent items run in parallel. Subagents that change files each work in their own git worktree.
 
 ## Trade-offs
 
-- **Cold starts cost tokens.** Each subagent re-reads the project's instructions. For a small task, delegating can cost more in total than doing it inline; it pays off when the raw material is large.
-- **Round trips are slower.** Each delegation waits for a subagent to finish.
-- **The skill is always in context.** Its one-sentence description is loaded in every session so the word "delegate" can trigger it.
+- Each subagent starts by reading the project's instructions again. On a small task that can cost more tokens in total than working in the main session, so delegating pays off when there is a lot to read.
+- You see nothing until the subagent finishes.
+- The skill's one-sentence description is loaded in every session, so that the word "delegate" can trigger it.
 
 ## Requirements
 
-Claude Code with subagents (the Agent tool). The skill relies on Claude Code's agent types, forks and `SendMessage`, so it is not portable to other agents as written.
+Claude Code with subagents (the Agent tool). The skill uses Claude Code's agent types, forks and `SendMessage`, so other coding agents can't run it as written.
 
 ## Uninstall
 
