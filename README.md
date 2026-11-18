@@ -19,6 +19,22 @@ Typing "run this on a subagent and pick a suitable model" every few messages get
 
 ## Install
 
+With the [skills](https://skills.sh) installer, for all your projects:
+
+```bash
+npx skills add FilipMessa/claude-code-delegate-skill -g -a claude-code
+```
+
+Leave out `-g` to install it into the current project only. Start a new Claude Code session afterwards, because skills are discovered when a session starts.
+
+Update it with:
+
+```bash
+npx skills update delegate -g
+```
+
+### Manually
+
 Clone the repository and link the skill into your personal skills folder:
 
 ```bash
@@ -27,16 +43,7 @@ mkdir -p ~/.claude/skills
 ln -s ~/claude-code-delegate-skill/skills/delegate ~/.claude/skills/delegate
 ```
 
-If a `delegate` skill already exists in `~/.claude/skills`, inspect it before replacing it. Start a new Claude Code session afterwards, because skills are discovered when a session starts. To update, run `git pull` in the clone.
-
-### Let Claude Code do it
-
-Paste this into Claude Code:
-
-```text
-Install the delegate skill from https://github.com/FilipMessa/claude-code-delegate-skill
-into ~/.claude/skills as a symlink to a clone, following its README.
-```
+If a `delegate` skill already exists in `~/.claude/skills`, inspect it before replacing it. To update, run `git pull` in the clone.
 
 ## How it works
 
@@ -60,8 +67,10 @@ Claude Code with subagents (the Agent tool). The skill relies on Claude Code's a
 ## Uninstall
 
 ```bash
-rm ~/.claude/skills/delegate
+npx skills remove delegate -g
 ```
+
+For a manual install, delete the link instead: `rm ~/.claude/skills/delegate`.
 
 ## License
 
