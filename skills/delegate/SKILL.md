@@ -1,0 +1,14 @@
+---
+name: delegate
+description: Hand work to a subagent on a fitting model and relay only its result. Use when the user writes "delegate", or asks to run something in or on a subagent.
+---
+
+**Delegate** the work the user points at (their message, or else the open task in this conversation) to subagents, and give the user only the result. You stay the orchestrator: you write the brief, pick the model and effort, and judge what comes back. Independent items (the user's "1 and 2") each get their own subagent, in parallel; parallel writers each get their own worktree, and heavy runs (builds, browser tests) take turns.
+
+1. **Brief.** The subagent starts cold, so the brief carries what it needs from this conversation: the goal in one sentence, facts and decisions already settled, the files, paths, issues or PRs involved, the constraints this session set (worktree, commit and push rules, repo skills to load), what done looks like, and a compact report format (answer first, `file:line` for code, failures only for gates). Pass context pointers (paths, skill names), not pasted contents. Done when: someone without this conversation could finish the task from the brief alone. When that brief would mostly retell the conversation, use a `fork` instead, which keeps the main model.
+
+2. **Model and effort.** A model the user named is the model. Otherwise judge the task and pick the cheapest model and effort that do it well; this skill authorises setting `effort`. Use the `Explore` agent for read-only search, `general-purpose` otherwise. Iterative work (debugging by hypothesis, tuning) goes to one subagent that runs the whole loop and returns with the conclusion.
+
+3. **Dispatch.** Tell the user in one line what each subagent does, on which model and effort, and why; then wait for the notification while the subagents do the work.
+
+4. **Result.** Check it against the brief's done line. Look yourself at what a decision rests on: screenshots, the final diff before a commit or PR, the key evidence behind a doubtful claim (ask the subagent for it with `SendMessage`). A weak or wrong result goes back to the same subagent, or up one model once. Then answer in the user's language with only what they need: the answer, its evidence (paths, links), open points. Follow-ups on the same task go to the same subagent.
