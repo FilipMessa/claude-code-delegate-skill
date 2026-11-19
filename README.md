@@ -51,10 +51,10 @@ If a `delegate` skill already exists in `~/.claude/skills`, inspect it before re
 
 ## How it works
 
-1. The subagent starts with none of your conversation, so Claude writes it a brief that works on its own. The brief covers the goal, decisions already made, the files and issues involved, the session's rules (worktrees, commit and push rules, skills to load), when the task counts as done, and how to report. If the brief would mostly repeat the conversation, Claude forks the session instead.
+1. The subagent starts with none of your conversation, so Claude writes it a brief that works on its own. The brief covers the goal, decisions already made, the files and issues involved, the session's rules (worktrees, commit and push rules, skills to load), when the task counts as done, and how to report. For a code change, done means the change with the narrowest checks for the touched files passing; review, the full checks and the pull request are left out of the brief. If the brief would mostly repeat the conversation, Claude forks the session instead.
 2. If you named a model, Claude uses it. Otherwise it picks the cheapest model and effort it expects to do the job. A task that takes several rounds of trial and error, such as debugging, goes to a single subagent that keeps going until it has an answer.
 3. Before the subagents start, Claude tells you in one line each what they will do, on which model and effort, and why.
-4. When a subagent finishes, Claude checks its report against the brief and reads screenshots and the final diff before a commit itself. A poor report goes back to the same subagent, or once to a stronger model. You get the answer, where to find the evidence, and anything still open.
+4. When a subagent finishes, Claude checks its report against the brief and reads screenshots and the final diff before a commit itself. A poor report goes back to the same subagent, or once to a stronger model. A code change is reviewed as soon as its subagent returns, and the project's full checks then run once, on the final commit, before the pull request. You get the answer, where to find the evidence, and anything still open.
 
 Independent items run in parallel. Subagents that change files each work in their own git worktree.
 
