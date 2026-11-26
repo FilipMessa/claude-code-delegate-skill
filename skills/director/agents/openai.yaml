@@ -1,0 +1,5 @@
+interface:
+  display_name: "Director"
+  short_description: "Delegate context-heavy work and handle only the results"
+policy:
+  allow_implicit_invocation: false
