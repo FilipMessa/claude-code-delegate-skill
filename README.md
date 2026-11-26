@@ -1,6 +1,9 @@
-# Delegate skill for Claude Code
+# Delegate and director skills for Claude Code
 
-A [Claude Code](https://claude.com/claude-code) skill that runs a task on a subagent and returns only the result to your session. Write "delegate" in a message, or ask for something to run on a subagent. Claude picks a model, writes the subagent a brief and reports back what it found.
+Two [Claude Code](https://claude.com/claude-code) skills that keep your session's context small.
+
+- **delegate** runs a task on a subagent and returns only the result to your session. Write "delegate" in a message, or ask for something to run on a subagent. Claude picks a model, writes the subagent a brief and reports back what it found.
+- **director** turns the whole session into a director: from then on, Claude delegates every context-heavy task by itself, without you asking each time. See [Director](#director).
 
 ![Two fixes delegated to subagents that run in parallel](demo/delegate.gif)
 
@@ -21,33 +24,40 @@ I kept typing "run this on a subagent and pick a suitable model". With this skil
 | `look at this as a Payload developer, on opus` | The subagent runs on the model you named |
 | `run the tests in a subagent` | Plain language works too, without the word "delegate" |
 
+## Director
+
+Type `/director` (in Codex, `$director`), optionally followed by the first task. For the rest of the session, Claude keeps only the conversation, decisions, briefs and results in its own context, and sends the reading to subagents through the delegate skill: exploring code, research, implementation, test runs, reviews, long issues and threads. It reads a known section of up to about 120 lines, or runs a short command, itself; anything broader goes to a subagent whole.
+
+Director only starts when you invoke it, never on its own, and it needs the delegate skill installed.
+
 ## Install
 
 With the [skills](https://skills.sh) installer, for all your projects:
 
 ```bash
-npx skills add FilipMessa/claude-code-delegate-skill -g -a claude-code
+npx skills add FilipMessa/claude-code-delegate-skill --skill '*' -g -a claude-code
 ```
 
-Leave out `-g` to install it into the current project only. Start a new Claude Code session afterwards, because skills are discovered when a session starts.
+This installs both skills; use `--skill delegate` instead to install only delegate. Leave out `-g` to install into the current project only. Start a new Claude Code session afterwards, because skills are discovered when a session starts.
 
-Update it with:
+Update them with:
 
 ```bash
-npx skills update delegate -g
+npx skills update delegate director -g
 ```
 
 ### Manually
 
-Clone the repository and link the skill into your personal skills folder:
+Clone the repository and link the skills into your personal skills folder:
 
 ```bash
 git clone https://github.com/FilipMessa/claude-code-delegate-skill.git ~/claude-code-delegate-skill
 mkdir -p ~/.claude/skills
 ln -s ~/claude-code-delegate-skill/skills/delegate ~/.claude/skills/delegate
+ln -s ~/claude-code-delegate-skill/skills/director ~/.claude/skills/director
 ```
 
-If a `delegate` skill already exists in `~/.claude/skills`, inspect it before replacing it. To update, run `git pull` in the clone.
+If a `delegate` or `director` skill already exists in `~/.claude/skills`, inspect it before replacing it. To update, run `git pull` in the clone.
 
 ## How it works
 
@@ -66,15 +76,17 @@ Independent items run in parallel. Subagents that change files each work in thei
 
 ## Requirements
 
-Claude Code with subagents (the Agent tool). The skill uses Claude Code's agent types, forks and `SendMessage`, so other coding agents can't run it as written.
+Claude Code with subagents (the Agent tool). The skills use Claude Code's agent types, forks and `SendMessage`.
+
+Codex partly works: it loads both skills from `~/.agents/skills`, but runs subagents with its own tools, so it follows the delegate steps only approximately.
 
 ## Uninstall
 
 ```bash
-npx skills remove delegate -g
+npx skills remove delegate director -g
 ```
 
-For a manual install, delete the link instead: `rm ~/.claude/skills/delegate`.
+For a manual install, delete the links instead: `rm ~/.claude/skills/delegate ~/.claude/skills/director`.
 
 ## License
 
